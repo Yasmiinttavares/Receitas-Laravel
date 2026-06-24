@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app_homolog:
+    build:
+      context: .
+      dockerfile: docker/homolog/Dockerfile
+    container_name: receitas_app_homolog
+    ports:
+      - "8080:80"
+    env_file:
+      - docker/homolog/.env.homolog
+    depends_on:
+      - db_homolog
+    networks:
+      - homolog_network
+
+  db_homolog:
+    image: postgres:16-alpine
+    container_name: receitas_db_homolog
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: receitas_homolog
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: homolog_secret
+    volumes:
+      - pgdata_homolog:/var/lib/postgresql/data
+    networks:
+      - homolog_network
+
+volumes:
+  pgdata_homolog:
+
+networks:
+  homolog_network:
+    driver: bridge

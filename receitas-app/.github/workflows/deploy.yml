@@ -1,0 +1,57 @@
+name: CD — Deploy Homologação e Produção
+
+on:
+  push:
+    branches: [homolog, main]
+  workflow_dispatch:
+    inputs:
+      ambiente:
+        description: 'Ambiente de deploy'
+        required: true
+        type: choice
+        options: [homolog, prod]
+
+jobs:
+  deploy_homolog:
+    name: Deploy → Homologação
+    if: github.ref == 'refs/heads/homolog'
+    runs-on: self-hosted
+    environment: homologacao
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Build e subida dos containers (Homolog)
+        run: |
+          docker compose -f docker-compose.homolog.yml build --no-cache
+          docker compose -f docker-compose.homolog.yml up -d
+
+      - name: Executar Migrations (Homolog)
+        run: |
+          docker exec receitas_app_homolog php artisan migrate --force
+
+      - name: Verificar status da aplicação
+        run: curl -f http://localhost:8080 || exit 1
+
+  deploy_prod:
+    name: Deploy → Produção
+    if: github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    environment: producao
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Build e subida dos containers (Prod)
+        run: |
+          docker compose -f docker-compose.prod.yml build --no-cache
+          docker compose -f docker-compose.prod.yml up -d
+
+      - name: Executar Migrations (Prod)
+        run: |
+          docker exec receitas_app_prod php artisan migrate --force
+
+      - name: Verificar status da aplicação
+        run: curl -f http://localhost:8081 || exit 1

@@ -1,0 +1,89 @@
+name: CI — Testes e Qualidade
+
+on:
+  push:
+    branches: [develop, homolog, main]
+  pull_request:
+    branches: [develop, homolog, main]
+
+jobs:
+  testes_e_qualidade:
+    name: PHPUnit + Laravel Pint
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: receitas_test
+          POSTGRES_USER: app_user
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo, pdo_pgsql, mbstring, xml
+          coverage: xdebug
+
+      - name: Instalar dependências (Composer)
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Copiar .env de teste
+        run: cp .env.example .env
+
+      - name: Configurar ambiente de teste
+        run: |
+          php artisan config:clear
+          php artisan key:generate
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: receitas_test
+          DB_USERNAME: app_user
+          DB_PASSWORD: secret
+
+      - name: Executar Migrations (banco de teste)
+        run: php artisan migrate --force
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: receitas_test
+          DB_USERNAME: app_user
+          DB_PASSWORD: secret
+
+      - name: Executar Testes Automatizados
+        run: php artisan test --filter='AuthFlowTest|ReceitaCrudTest'
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: receitas_test
+          DB_USERNAME: app_user
+          DB_PASSWORD: secret
+
+      - name: Executar suíte completa de testes
+        run: php artisan test
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: receitas_test
+          DB_USERNAME: app_user
+          DB_PASSWORD: secret
+
+      - name: Análise de Qualidade (Laravel Pint)
+        run: ./vendor/bin/pint --test

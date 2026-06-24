@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app_prod:
+    build:
+      context: .
+      dockerfile: docker/prod/Dockerfile
+    container_name: receitas_app_prod
+    ports:
+      - "8081:80"
+    env_file:
+      - docker/prod/.env.prod
+    depends_on:
+      - db_prod
+    networks:
+      - prod_network
+
+  db_prod:
+    image: postgres:16-alpine
+    container_name: receitas_db_prod
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: receitas_prod
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: prod_secret
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    networks:
+      - prod_network
+
+volumes:
+  pgdata_prod:
+
+networks:
+  prod_network:
+    driver: bridge
