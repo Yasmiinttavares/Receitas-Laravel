@@ -9,7 +9,7 @@ sudo apt-get install -y ca-certificates curl gnupg lsb-release git
 
 echo "==> Instalando Docker..."
 sudo install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
 echo \
@@ -22,7 +22,6 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plug
 echo "==> Iniciando Docker..."
 sudo systemctl enable docker
 sudo systemctl start docker
-sudo usermod -aG docker $USER
 
 echo "==> Clonando projeto..."
 if [ -d "$HOME/Receitas-Laravel" ]; then
@@ -37,4 +36,4 @@ fi
 echo ""
 echo "==> Bootstrap concluído!"
 echo "Execute: cd ~/Receitas-Laravel"
-echo "Depois: ./scripts/deploy.sh homolog"
+echo "Depois:  sudo ./scripts/deploy.sh homolog"
