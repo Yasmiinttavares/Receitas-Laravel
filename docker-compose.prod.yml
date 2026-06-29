@@ -1,0 +1,51 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: receitas_app_prod
+    working_dir: /var/www/html/receitas-app
+    ports:
+      - "8081:80"
+    environment:
+      APP_NAME: "Receitas"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: "http://177.44.248.48:8081"
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: receitas_prod
+      DB_USERNAME: receitas_user
+      DB_PASSWORD: prod_secret
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - prod_network
+
+  db:
+    image: postgres:16-alpine
+    container_name: receitas_db_prod
+    ports:
+      - "5434:5432"
+    environment:
+      POSTGRES_DB: receitas_prod
+      POSTGRES_USER: receitas_user
+      POSTGRES_PASSWORD: prod_secret
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U receitas_user -d receitas_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - prod_network
+
+volumes:
+  pgdata_prod:
+
+networks:
+  prod_network:
+    driver: bridge

@@ -1,0 +1,51 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: receitas_app_homolog
+    working_dir: /var/www/html/receitas-app
+    ports:
+      - "8080:80"
+    environment:
+      APP_NAME: "Receitas Homolog"
+      APP_ENV: homologacao
+      APP_DEBUG: "true"
+      APP_URL: "http://177.44.248.48:8080"
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: receitas_homolog
+      DB_USERNAME: receitas_user
+      DB_PASSWORD: homolog_secret
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - homolog_network
+
+  db:
+    image: postgres:16-alpine
+    container_name: receitas_db_homolog
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: receitas_homolog
+      POSTGRES_USER: receitas_user
+      POSTGRES_PASSWORD: homolog_secret
+    volumes:
+      - pgdata_homolog:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U receitas_user -d receitas_homolog"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - homolog_network
+
+volumes:
+  pgdata_homolog:
+
+networks:
+  homolog_network:
+    driver: bridge

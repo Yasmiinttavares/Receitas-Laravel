@@ -1,0 +1,73 @@
+name: CI — Testes e Qualidade
+
+on:
+  push:
+    branches: [develop, homolog, main]
+  pull_request:
+    branches: [homolog, main]
+
+jobs:
+  ci:
+    name: PHPUnit + Laravel Pint
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: receitas_test
+          POSTGRES_USER: receitas_user
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Instalar PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo, pdo_pgsql, mbstring, xml, zip
+          coverage: xdebug
+
+      - name: Instalar dependências (Composer)
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Copiar .env de teste
+        run: cp .env.example .env.testing
+
+      - name: Gerar chave da aplicação
+        run: php artisan key:generate --env=testing
+
+      - name: Executar Migrations
+        run: php artisan migrate --env=testing --force
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: receitas_test
+          DB_USERNAME: receitas_user
+          DB_PASSWORD: secret
+
+      - name: Executar Testes Automatizados (20 testes)
+        run: php artisan test --env=testing
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: receitas_test
+          DB_USERNAME: receitas_user
+          DB_PASSWORD: secret
+
+      - name: Análise de Qualidade de Código (Laravel Pint)
+        run: ./vendor/bin/pint --test
+
+      - name: Build da imagem Docker
+        run: docker build -t receitas-app:${{ github.sha }} .
