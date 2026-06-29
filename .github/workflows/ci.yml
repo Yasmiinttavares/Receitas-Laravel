@@ -11,6 +11,10 @@ jobs:
     name: PHPUnit + Laravel Pint
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./receitas-app
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -70,4 +74,4 @@ jobs:
         run: ./vendor/bin/pint --test
 
       - name: Build da imagem Docker
-        run: docker build -t receitas-app:${{ github.sha }} .
+        run: docker build -t receitas-app:${{ github.sha }} ../
