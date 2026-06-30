@@ -1,14 +1,14 @@
-name: CI — Testes e Qualidade
+name: CI/CD — Testes, Qualidade e Deploy
 
 on:
   push:
-    branches: [develop, homolog, main]
+    branches: [main, homolog]
   pull_request:
-    branches: [homolog, main]
+    branches: [main, homolog]
 
 jobs:
   ci:
-    name: PHPUnit + Laravel Pint
+    name: Testes e Qualidade
     runs-on: ubuntu-latest
 
     defaults:
@@ -79,3 +79,43 @@ jobs:
 
       - name: Build da imagem Docker
         run: docker build -t receitas-app:${{ github.sha }} ../
+
+  deploy_homolog:
+    name: Deploy Homologação
+    needs: ci
+    if: github.ref == 'refs/heads/homolog' && github.event_name == 'push'
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Deploy Homologação
+        run: |
+          cd ~/Receitas-Laravel
+          git pull origin homolog
+          sudo docker compose -f docker-compose.homolog.yml up -d --build
+          sudo docker compose -f docker-compose.homolog.yml exec app php artisan migrate --force
+
+      - name: Verificar aplicação
+        run: curl -f http://177.44.248.48:8080 || exit 1
+
+  deploy_prod:
+    name: Deploy Produção
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Deploy Produção
+        run: |
+          cd ~/Receitas-Laravel
+          git pull origin main
+          sudo docker compose -f docker-compose.prod.yml up -d --build
+          sudo docker compose -f docker-compose.prod.yml exec app php artisan migrate --force
+
+      - name: Verificar aplicação
+        run: curl -f http://177.44.248.48:8081 || exit 1
