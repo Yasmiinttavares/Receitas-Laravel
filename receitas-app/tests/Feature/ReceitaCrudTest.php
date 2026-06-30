@@ -4,11 +4,9 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithoutMiddleware;
 
 class ReceitaCrudTest extends TestCase
 {
-    use WithoutMiddleware;
     use RefreshDatabase;
 
     public function test_can_list_receitas_page(): void
