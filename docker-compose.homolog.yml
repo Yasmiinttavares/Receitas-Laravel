@@ -1,16 +1,16 @@
 services:
   app:
     build:
-      context: .
+      context: ./receitas-app
       dockerfile: Dockerfile
     container_name: receitas_app_homolog
-    working_dir: /var/www/html/receitas-app
     ports:
       - "8080:80"
     environment:
       APP_NAME: "Receitas Homolog"
       APP_ENV: homologacao
       APP_DEBUG: "true"
+      APP_KEY: "base64:k3DuoV3PuKuTP8whWPwm7X+3RfDkiksO79dqngBYfFY="
       APP_URL: "http://177.44.248.48:8080"
       DB_CONNECTION: pgsql
       DB_HOST: db
