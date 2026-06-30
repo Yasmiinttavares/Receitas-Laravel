@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,9 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         if (getenv('APP_ENV') === 'testing') {
-            $middleware->remove(\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class);
+            $middleware->remove(VerifyCsrfToken::class);
         }
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+    
