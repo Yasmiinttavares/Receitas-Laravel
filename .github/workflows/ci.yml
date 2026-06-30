@@ -49,10 +49,13 @@ jobs:
 
       - name: Gerar chave da aplicação
         run: php artisan key:generate --env=testing
+        env:
+          APP_ENV: testing
 
       - name: Executar Migrations
         run: php artisan migrate --env=testing --force
         env:
+          APP_ENV: testing
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
@@ -63,6 +66,7 @@ jobs:
       - name: Executar Testes Automatizados (20 testes)
         run: php artisan test --env=testing
         env:
+          APP_ENV: testing
           DB_CONNECTION: pgsql
           DB_HOST: 127.0.0.1
           DB_PORT: 5432
