@@ -12,7 +12,7 @@
     </style>
 </head>
 <body>
-    <h1>Receitas Teste</h1>
+    <h1>Receitas Teste top</h1>
     <p>
         <a href="{{ route('receitas.create') }}">Nova receita</a>
         |
